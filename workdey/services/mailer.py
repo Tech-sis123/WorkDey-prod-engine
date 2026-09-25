@@ -80,25 +80,19 @@ def send(*, user: User, subject: str, html_body: str, text: str, match_id: str |
     )
     db.session.add(row)
     db.session.flush()
-    if not Config.BREVO_API_KEY:
+    if not Config.APIFY_API_TOKEN:
         row.status = "skipped"
-        row.error = "BREVO_API_KEY missing — stored in outbox"
+        row.error = "APIFY_API_TOKEN missing — stored in outbox"
         return row
     try:
         res = requests.post(
-            BREVO,
-            headers={
-                "api-key": Config.BREVO_API_KEY,
-                "accept": "application/json",
-                "content-type": "application/json",
-            },
+            f"https://api.apify.com/v2/acts/apify~send-mail/runs?token={Config.APIFY_API_TOKEN}",
+            headers={"Content-Type": "application/json"},
             json={
-                "sender": {"name": "WorkDey", "email": Config.BREVO_SENDER_EMAIL},
-                "to": [{"email": user.email, "name": user.name or user.email}],
+                "to": user.email,
                 "subject": subject[:50],
-                "htmlContent": html_body,
-                "textContent": text,
-                "tags": [tag],
+                "html": html_body,
+                "text": text,
             },
             timeout=30,
         )
@@ -107,11 +101,12 @@ def send(*, user: User, subject: str, html_body: str, text: str, match_id: str |
             row.error = res.text[:400]
         else:
             row.status = "sent"
-            row.provider_id = str((res.json() or {}).get("messageId") or "")
+            # Apify returns the run id in data.id
+            row.provider_id = str((res.json() or {}).get("data", {}).get("id", ""))
     except Exception as exc:
         row.status = "failed"
         row.error = str(exc)[:400]
-        log.exception("brevo send failed")
+        log.exception("apify send-mail failed")
     return row
 
 
