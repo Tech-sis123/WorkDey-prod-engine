@@ -19,12 +19,14 @@ def create_app(config_object: type = Config) -> Flask:
         static_url_path="/static",
     )
     app.config.from_object(config_object)
+    import re
     app.config["SESSION_COOKIE_HTTPONLY"] = True
-    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["SESSION_COOKIE_SAMESITE"] = "None"
+    app.config["SESSION_COOKIE_SECURE"] = True
     Path(app.config["UPLOAD_DIR"]).mkdir(parents=True, exist_ok=True)
 
     db.init_app(app)
-    CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
+    CORS(app, supports_credentials=True, resources={r"/*": {"origins": re.compile(r"^https?://.*$")}})
 
     from workdey import models  # noqa: F401
     from workdey.routes_auth import auth_bp

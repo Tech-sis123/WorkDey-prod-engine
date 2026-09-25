@@ -13,9 +13,9 @@ def run_extensive_test():
     with app.app_context():
         print("=== 1. Setting up test user ===")
         # Check if demo user exists
-        user = User.query.filter_by(email="testagent@workdey.app").first()
+        user = User.query.filter_by(email="esabublessing7@gmail.com").first()
         if not user:
-            user = User(email="testagent@workdey.app", password_hash="testpass", name="Test Agent")
+            user = User(email="esabublessing7@gmail.com", password_hash="testpass", name="Blessing Esabu")
             db.session.add(user)
             db.session.commit()
             print(f"Created user {user.email}")
@@ -48,7 +48,13 @@ def run_extensive_test():
             db.session.commit()
             print("Created watch for test user.")
 
-        print("\n=== 2. Triggering Apify Agent & Matching Workflow ===")
+        print("\n=== 2. Zapping Email directly ===")
+        from workdey.services.mailer import send_welcome
+        row = send_welcome(user)
+        db.session.commit()
+        print(f"Sent Welcome Email: Status = {row.status}")
+
+        print("\n=== 3. Triggering Apify Agent & Matching Workflow ===")
         print("This will call the Apify API, wait for the dataset, save matches, and trigger Brevo...")
         
         # The Apify run will take a moment depending on Apify's queue and scraper speed
