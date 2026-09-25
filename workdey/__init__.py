@@ -24,7 +24,7 @@ def create_app(config_object: type = Config) -> Flask:
     Path(app.config["UPLOAD_DIR"]).mkdir(parents=True, exist_ok=True)
 
     db.init_app(app)
-    CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "*"}})
+    CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 
     from workdey import models  # noqa: F401
     from workdey.routes_auth import auth_bp
